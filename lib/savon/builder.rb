@@ -143,6 +143,7 @@ module Savon
     def message
       element_form_default = @globals[:element_form_default] || @wsdl.element_form_default
       # TODO: clean this up! [dh, 2012-12-17]
+      strict_sequence @locals[:message] if @globals[:strict_sequence]
       Message.new(message_tag, namespace_identifier, @types, @used_namespaces, @locals[:message],
                   element_form_default, @globals[:convert_request_keys_to])
     end
@@ -176,6 +177,23 @@ module Savon
         xml.tag! env_namespace, name, namespaces, &block
       else
         xml.tag! name, namespaces, &block
+      end
+    end
+
+    def strict_sequence(message,type=nil,order=nil)
+      # It doesn't seem like Wasabi is currently storing message types... at least not for my WSDL...
+      # So fudge initial default type for now
+      parent = type ||= @message_tag.to_s + 'Type'
+      case message
+      when Hash
+        message[:order!] = order.map(&:to_sym) & message.keys if order
+        message.each do |name,child|
+          type = @types[ [ parent, name.to_s ] ]
+          order = @wsdl.parser.types[type].try{ |h| h[:order!] }
+          strict_sequence child, type, order
+        end
+      when Array
+        message.each{ |child| strict_sequence child, type, order }
       end
     end
 

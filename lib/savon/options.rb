@@ -85,6 +85,7 @@ module Savon
         :use_wsa_headers           => false,
         :no_message_tag            => false,
         :follow_redirects          => false,
+        :strict_sequence           => false,
       }
 
       options = defaults.merge(options)
@@ -302,6 +303,12 @@ module Savon
     # Instruct requests to follow HTTP redirects.
     def follow_redirects(follow_redirects)
       @options[:follow_redirects] = follow_redirects
+    end
+
+    # Automatically adds :order! to elements following the WSDL sequence tag
+    # for services that require strict ordering
+    def strict_sequence(strict_sequence)
+      @options[:strict_sequence] = strict_sequence
     end
   end
 
